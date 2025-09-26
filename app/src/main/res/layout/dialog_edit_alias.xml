@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="16dp">
+
+    <EditText
+        android:id="@+id/gotoInput"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Goto address" />
+
+    <EditText
+        android:id="@+id/privateCommentInput"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Private comment" />
+
+    <EditText
+        android:id="@+id/publicCommentInput"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Public comment" />
+
+    <CheckBox
+        android:id="@+id/activeCheckbox"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Active" />
+
+</LinearLayout>
