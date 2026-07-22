@@ -1,0 +1,194 @@
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/background_dark">
+
+    <LinearLayout
+        android:id="@+id/aliasContainer"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:gravity="center_horizontal"
+        android:paddingTop="100dp"
+        android:paddingBottom="32dp"
+        android:paddingStart="32dp"
+        android:paddingEnd="32dp"
+        android:background="@color/background_dark">
+
+        <TextView
+            android:id="@+id/createTitle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="CREATE ALIAS"
+            android:textSize="24sp"
+            android:textColor="@color/neon_cyan"
+            android:textStyle="bold"
+            android:letterSpacing="0.15"
+            android:gravity="center"
+            android:layout_marginBottom="32dp" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="ALIAS"
+            android:textSize="11sp"
+            android:textColor="@color/text_secondary"
+            android:textStyle="bold"
+            android:letterSpacing="0.1"
+            android:layout_marginBottom="4dp" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/addressLayout"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                app:hintEnabled="false"
+                app:boxStrokeColor="@color/box_stroke_color"
+                app:boxStrokeWidth="1dp"
+                app:boxStrokeWidthFocused="2dp"
+                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/addressInput"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:hint="user@domain.com"
+                    android:inputType="textEmailAddress"
+                    android:textColor="@color/text_primary"
+                    android:textColorHint="@color/text_muted" />
+
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <ImageButton
+                android:id="@+id/reloadAliasButton"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:contentDescription="Generate new alias"
+                android:src="@android:drawable/ic_menu_rotate"
+                android:background="@drawable/button_neon_secondary"
+                android:scaleType="center"
+                app:tint="@color/neon_cyan"
+                android:layout_marginStart="12dp"
+                android:layout_gravity="center_vertical" />
+
+        </LinearLayout>
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="GOTO"
+            android:textSize="11sp"
+            android:textColor="@color/text_secondary"
+            android:textStyle="bold"
+            android:letterSpacing="0.1"
+            android:layout_marginTop="20dp"
+            android:layout_marginBottom="4dp" />
+
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/gotoLayout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:hintEnabled="false"
+            app:boxStrokeColor="@color/box_stroke_color"
+            app:boxStrokeWidth="1dp"
+            app:boxStrokeWidthFocused="2dp"
+            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/gotoInput"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="forward@example.com"
+                android:inputType="textEmailAddress"
+                android:textColor="@color/text_primary"
+                android:textColorHint="@color/text_muted" />
+
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="PRIVATE COMMENT"
+            android:textSize="11sp"
+            android:textColor="@color/text_secondary"
+            android:textStyle="bold"
+            android:letterSpacing="0.1"
+            android:layout_marginTop="20dp"
+            android:layout_marginBottom="4dp" />
+
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/privcommentLayout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:hintEnabled="false"
+            app:boxStrokeColor="@color/box_stroke_color"
+            app:boxStrokeWidth="1dp"
+            app:boxStrokeWidthFocused="2dp"
+            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/privcomment"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="Private note..."
+                android:inputType="textMultiLine"
+                android:textColor="@color/text_primary"
+                android:textColorHint="@color/text_muted" />
+
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="PUBLIC COMMENT"
+            android:textSize="11sp"
+            android:textColor="@color/text_secondary"
+            android:textStyle="bold"
+            android:letterSpacing="0.1"
+            android:layout_marginTop="20dp"
+            android:layout_marginBottom="4dp" />
+
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/pubcommentLayout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:hintEnabled="false"
+            app:boxStrokeColor="@color/box_stroke_color"
+            app:boxStrokeWidth="1dp"
+            app:boxStrokeWidthFocused="2dp"
+            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/pubcomment"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="Public note..."
+                android:inputType="textMultiLine"
+                android:textColor="@color/text_primary"
+                android:textColorHint="@color/text_muted" />
+
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <Button
+            android:id="@+id/createAliasButton"
+            android:layout_width="match_parent"
+            android:layout_height="56dp"
+            android:text="CREATE"
+            android:textSize="16sp"
+            android:textColor="@color/background_dark"
+            android:textStyle="bold"
+            android:letterSpacing="0.15"
+            android:background="@drawable/button_neon_primary"
+            android:stateListAnimator="@null"
+            android:elevation="0dp"
+            android:layout_marginTop="32dp" />
+
+    </LinearLayout>
+
+</ScrollView>

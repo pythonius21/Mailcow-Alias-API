@@ -1,0 +1,4 @@
+<resources>
+    <string name="app_name">MailcowAPI</string>
+    <string name="title_activity_alias_list">AliasListActivity</string>
+</resources>

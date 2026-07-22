@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Andromeda GTK Palette -->
+    <color name="background_dark">#1A1D23</color>
+    <color name="background_card">#23262E</color>
+    <color name="background_surface">#23262E</color>
+    <color name="neon_cyan">#00e8c6</color>
+    <color name="neon_magenta">#c74ded</color>
+    <color name="neon_purple">#c74ded</color>
+    <color name="neon_blue">#7cb7ff</color>
+    <color name="neon_green">#84ff39</color>
+    <color name="text_primary">#d8dee9</color>
+    <color name="text_secondary">#a5abb6</color>
+    <color name="text_muted">#797d85</color>
+    <color name="divider">#0f1115</color>
+    <color name="glow_cyan">#2200e8c6</color>
+    <color name="andromeda_lime">#84ff39</color>
+    <color name="andromeda_red">#ff007a</color>
+    <color name="andromeda_blue">#7cb7ff</color>
+    <color name="andromeda_teal">#34eceb</color>
+    <color name="andromeda_orange">#f39c12</color>
+    <color name="andromeda_yellow">#f3d56e</color>
+    <color name="selected_bg">#007DB8</color>
+
+    <color name="purple_200">#FFBB86FC</color>
+    <color name="purple_500">#FF6200EE</color>
+    <color name="purple_700">#FF3700B3</color>
+    <color name="teal_200">#FF03DAC5</color>
+    <color name="teal_700">#FF018786</color>
+    <color name="black">#FF000000</color>
+    <color name="white">#FFFFFFFF</color>
+
+    <!-- Alias Items -->
+    <color name="alias_item_background_dark">#23262E</color>
+    <color name="alias_item_text_light">#d8dee9</color>
+    <color name="alias_item_border_accent">#00e8c6</color>
+    <color name="empty_list_text_color">#797d85</color>
+</resources>
