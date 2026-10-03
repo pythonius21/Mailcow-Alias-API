@@ -1,25 +1,25 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Andromeda GTK Palette -->
-    <color name="background_dark">#1A1D23</color>
-    <color name="background_card">#23262E</color>
-    <color name="background_surface">#23262E</color>
-    <color name="neon_cyan">#00e8c6</color>
-    <color name="neon_magenta">#c74ded</color>
-    <color name="neon_purple">#c74ded</color>
-    <color name="neon_blue">#7cb7ff</color>
-    <color name="neon_green">#84ff39</color>
-    <color name="text_primary">#d8dee9</color>
-    <color name="text_secondary">#a5abb6</color>
-    <color name="text_muted">#797d85</color>
-    <color name="divider">#0f1115</color>
-    <color name="glow_cyan">#2200e8c6</color>
-    <color name="andromeda_lime">#84ff39</color>
-    <color name="andromeda_red">#ff007a</color>
-    <color name="andromeda_blue">#7cb7ff</color>
-    <color name="andromeda_teal">#34eceb</color>
-    <color name="andromeda_orange">#f39c12</color>
-    <color name="andromeda_yellow">#f3d56e</color>
+    <!-- Light Mode Andromeda Palette -->
+    <color name="background_dark">#E8EAED</color>
+    <color name="background_card">#F5F6F7</color>
+    <color name="background_surface">#F5F6F7</color>
+    <color name="neon_cyan">#009E8E</color>
+    <color name="neon_magenta">#A626A4</color>
+    <color name="neon_purple">#A626A4</color>
+    <color name="neon_blue">#3B82F6</color>
+    <color name="neon_green">#4CAF50</color>
+    <color name="text_primary">#1A1D23</color>
+    <color name="text_secondary">#4A5568</color>
+    <color name="text_muted">#718096</color>
+    <color name="divider">#CBD5E0</color>
+    <color name="glow_cyan">#22009E8E</color>
+    <color name="andromeda_lime">#4CAF50</color>
+    <color name="andromeda_red">#E53935</color>
+    <color name="andromeda_blue">#3B82F6</color>
+    <color name="andromeda_teal">#009E8E</color>
+    <color name="andromeda_orange">#F57C00</color>
+    <color name="andromeda_yellow">#FBC02D</color>
     <color name="selected_bg">#007DB8</color>
 
     <color name="purple_200">#FFBB86FC</color>
@@ -31,8 +31,8 @@
     <color name="white">#FFFFFFFF</color>
 
     <!-- Alias Items -->
-    <color name="alias_item_background_dark">#23262E</color>
-    <color name="alias_item_text_light">#d8dee9</color>
-    <color name="alias_item_border_accent">#00e8c6</color>
-    <color name="empty_list_text_color">#797d85</color>
+    <color name="alias_item_background_dark">#F5F6F7</color>
+    <color name="alias_item_text_light">#1A1D23</color>
+    <color name="alias_item_border_accent">#009E8E</color>
+    <color name="empty_list_text_color">#718096</color>
 </resources>

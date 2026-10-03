@@ -130,11 +130,12 @@
         android:textColor="@color/background_dark"
         android:textStyle="bold"
         android:letterSpacing="0.15"
-        android:background="@drawable/button_neon_primary"
+        android:background="@drawable/button_glow_primary"
         app:layout_constraintTop_toBottomOf="@id/apiKeyInputLayout"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
+        android:layout_marginTop="32dp"
         android:stateListAnimator="@null"
         android:elevation="0dp" />
 

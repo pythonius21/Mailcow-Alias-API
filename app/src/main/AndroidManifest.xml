@@ -28,17 +28,29 @@
             android:theme="@style/AppTheme" />
 
         <activity
-            android:name=".MainActivity"
+            android:name=".SettingsActivity"
+            android:exported="false"
+            android:label=""
+            android:theme="@style/AppTheme" />
+
+        <activity
+            android:name=".SplashActivity"
             android:exported="true"
-             android:label=""
-            android:theme="@style/AppTheme"
-            tools:ignore="MissingClass">
+            android:label=""
+            android:theme="@style/SplashTheme">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <activity
+            android:name=".MainActivity"
+            android:exported="false"
+            android:label=""
+            android:theme="@style/AppTheme"
+            tools:ignore="MissingClass" />
     </application>
 
 </manifest>

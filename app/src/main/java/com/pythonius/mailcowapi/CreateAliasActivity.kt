@@ -5,14 +5,10 @@ import android.content.SharedPreferences
 import android.os.Build
 import android.os.Bundle
 import android.view.WindowManager
-import android.widget.Button
-import android.widget.EditText
-import android.widget.ImageButton
-import android.widget.Toast
+import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
+import org.json.JSONArray
 import org.json.JSONObject
-import java.net.HttpURLConnection
-import java.net.URL
 import okhttp3.*
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import java.io.BufferedReader
@@ -21,6 +17,8 @@ import java.io.InputStreamReader
 import kotlin.random.Random
 import android.content.ClipData
 import android.content.ClipboardManager
+import androidx.security.crypto.EncryptedSharedPreferences
+import androidx.security.crypto.MasterKey
 
 class CreateAliasActivity  : AppCompatActivity() {
 
@@ -29,12 +27,14 @@ class CreateAliasActivity  : AppCompatActivity() {
     private lateinit var privcomment: EditText
     private lateinit var pubcomment: EditText
     private lateinit var createButton: Button
-    private lateinit var reloadAliasButton: ImageButton // Add this line
+    private lateinit var reloadAliasButton: ImageButton
+    private lateinit var domainSpinner: AutoCompleteTextView
 
     private lateinit var baseUrl: String
     private lateinit var apiKey: String
-    private lateinit var aliasDomain: String // Added
-    private val prefixWords = mutableListOf<String>() // Now mutable, loaded from assets
+    private lateinit var aliasDomain: String
+    private val prefixWords = mutableListOf<String>()
+    private val domainList = mutableListOf<String>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -51,18 +51,25 @@ class CreateAliasActivity  : AppCompatActivity() {
         privcomment = findViewById(R.id.privcomment)
         pubcomment = findViewById(R.id.pubcomment)
         createButton = findViewById(R.id.createAliasButton)
-        reloadAliasButton = findViewById(R.id.reloadAliasButton) // Add this line
+        reloadAliasButton = findViewById(R.id.reloadAliasButton)
+        domainSpinner = findViewById(R.id.domainSpinner)
 
-        // Lese baseUrl und API Key aus SharedPreferences
-        val prefs = getSharedPreferences("mailcow_prefs", Context.MODE_PRIVATE)
+        val masterKey = MasterKey.Builder(this)
+            .setKeyScheme(MasterKey.KeyScheme.AES256_GCM)
+            .build()
+        val prefs = EncryptedSharedPreferences.create(
+            this,
+            "mailcow_prefs_secure",
+            masterKey,
+            EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
+            EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
+        )
         baseUrl = prefs.getString("server_url", "") ?: ""
         apiKey = prefs.getString("api_key", "") ?: ""
-        // Inside onCreate, after getting baseUrl and apiKey
-        aliasDomain = prefs.getString("default_domain", "fermium.cc") ?: "fermium.cc" // Example: get from prefs or use a default
 
-        loadWordsFromAssets() // Call this to load your words
+        loadWordsFromAssets()
+        loadDomains()
 
-        // Inside onCreate, after initializing views
         reloadAliasButton.setOnClickListener {
             generateRandomAlias()
         }
@@ -76,7 +83,7 @@ class CreateAliasActivity  : AppCompatActivity() {
                 return@setOnClickListener
             }
 
-            createAlias(address, goto)
+            createAlias("$address@$aliasDomain", goto)
         }
     }
 
@@ -96,9 +103,67 @@ class CreateAliasActivity  : AppCompatActivity() {
         }
     }
 
+    private fun loadDomains() {
+        val apiUrl = "https://$baseUrl/api/v1/get/alias-domain/all"
+        val request = Request.Builder()
+            .url(apiUrl)
+            .addHeader("X-Api-Key", apiKey)
+            .build()
+
+        OkHttpClient().newCall(request).enqueue(object : Callback {
+            override fun onFailure(call: Call, e: IOException) {
+                runOnUiThread {
+                    Toast.makeText(this@CreateAliasActivity, "Failed to load alias domains: ${e.message}", Toast.LENGTH_SHORT).show()
+                }
+            }
+
+            override fun onResponse(call: Call, response: Response) {
+                val body = response.body?.string()
+                runOnUiThread {
+                    if (response.isSuccessful && !body.isNullOrEmpty()) {
+                        try {
+                            val domainArray = JSONArray(body)
+                            domainList.clear()
+                            for (i in 0 until domainArray.length()) {
+                                val obj = domainArray.getJSONObject(i)
+                                if (obj.optInt("active", 0) == 1) {
+                                    val domainName = obj.optString("alias_domain", obj.optString("domain", obj.optString("domain_name", "")))
+                                    if (domainName.isNotEmpty()) {
+                                        domainList.add(domainName)
+                                    }
+                                }
+                            }
+                            if (domainList.isNotEmpty()) {
+                                val adapter = ArrayAdapter(this@CreateAliasActivity, android.R.layout.simple_dropdown_item_1line, domainList)
+                                domainSpinner.setAdapter(adapter)
+                                val storedDomain = getSharedPreferences("mailcow_prefs_secure", Context.MODE_PRIVATE).getString("last_domain", null)
+                                val defaultDomain = storedDomain ?: domainList[0]
+                                aliasDomain = defaultDomain
+                                domainSpinner.setText(defaultDomain, false)
+                                domainSpinner.setOnItemClickListener { _, _, position, _ ->
+                                    aliasDomain = domainList[position]
+                                    getSharedPreferences("mailcow_prefs_secure", Context.MODE_PRIVATE).edit().putString("last_domain", aliasDomain).apply()
+                                }
+                            } else {
+                                Toast.makeText(this@CreateAliasActivity, "No active alias domains found", Toast.LENGTH_SHORT).show()
+                            }
+                        } catch (e: Exception) {
+                            Toast.makeText(this@CreateAliasActivity, "Failed to parse alias domains", Toast.LENGTH_SHORT).show()
+                        }
+                    } else {
+                        Toast.makeText(this@CreateAliasActivity, "Failed to load alias domains (${response.code})", Toast.LENGTH_SHORT).show()
+                    }
+                }
+            }
+        })
+    }
+
     private fun generateRandomAlias() {
+        if (domainList.isEmpty()) {
+            Toast.makeText(this, "No domains available", Toast.LENGTH_SHORT).show()
+            return
+        }
         if (prefixWords.isEmpty()) {
-            // Fallback if the list is empty or couldn't be loaded
             val randomPrefix = "random${Random.nextInt(1000, 9999)}"
             addressInput.setText("$randomPrefix@$aliasDomain")
             Toast.makeText(this, "Word list empty, using default.", Toast.LENGTH_SHORT).show()

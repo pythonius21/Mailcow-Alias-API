@@ -12,8 +12,8 @@ android {
         applicationId = "com.pythonius.mailcowapi"
         minSdk = 24
         targetSdk = 35
-        versionCode = 1
-        versionName = "1.0.6"
+        versionCode = 2
+        versionName = "1.0.7"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -66,4 +66,6 @@ dependencies {
     implementation("androidx.constraintlayout:constraintlayout:2.1.4")
     implementation("com.google.android.material:material:1.11.0")
     implementation("com.squareup.okhttp3:okhttp:4.12.0")
+    implementation("androidx.biometric:biometric:1.1.0")
+    implementation("androidx.security:security-crypto:1.1.0-alpha06")
 }

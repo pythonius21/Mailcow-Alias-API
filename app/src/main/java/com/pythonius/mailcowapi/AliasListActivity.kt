@@ -9,6 +9,7 @@ import android.os.Build
 import android.os.Bundle
 import android.view.Gravity
 import android.view.LayoutInflater
+import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
 import android.view.WindowManager
@@ -19,12 +20,18 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.widget.Toolbar
 import androidx.core.content.ContextCompat
+import androidx.core.view.GravityCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import androidx.drawerlayout.widget.DrawerLayout
+import androidx.security.crypto.EncryptedSharedPreferences
+import androidx.security.crypto.MasterKey
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.floatingactionbutton.FloatingActionButton
+import com.google.android.material.navigation.NavigationView
 import com.pythonius.mailcowapi.R.layout.dialog_alias_details
 import com.pythonius.mailcowapi.R.layout.dialog_edit_alias
 import okhttp3.*
@@ -40,7 +47,16 @@ class AliasListActivity : AppCompatActivity() {
     private lateinit var baseUrl: String
     private lateinit var apiKey: String
     private lateinit var aliasContainer: LinearLayout
+    private lateinit var listContainer: LinearLayout
+    private lateinit var searchInput: EditText
     private lateinit var swipeRefresh: SwipeRefreshLayout
+    private lateinit var drawerLayout: DrawerLayout
+    private lateinit var navigationView: NavigationView
+    private lateinit var toolbar: Toolbar
+
+    private var allAliasesJson: String = "[]"
+    private var isSelectionMode = false
+    private val selectedAddresses = mutableSetOf<String>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -51,18 +67,62 @@ class AliasListActivity : AppCompatActivity() {
         }
 
         setContentView(R.layout.activity_alias_list)
-        sharedPreferences = getSharedPreferences("mailcow_prefs", Context.MODE_PRIVATE)
+        val masterKey = MasterKey.Builder(this)
+            .setKeyScheme(MasterKey.KeyScheme.AES256_GCM)
+            .build()
+        sharedPreferences = EncryptedSharedPreferences.create(
+            this,
+            "mailcow_prefs_secure",
+            masterKey,
+            EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
+            EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
+        )
         baseUrl = sharedPreferences.getString("server_url", "") ?: ""
         apiKey = sharedPreferences.getString("api_key", "") ?: ""
 
         aliasContainer = findViewById(R.id.aliasContainer)
+        listContainer = findViewById(R.id.listContainer)
+        searchInput = findViewById(R.id.searchInput)
         swipeRefresh = findViewById(R.id.swipeRefresh)
+        drawerLayout = findViewById(R.id.drawerLayout)
+        navigationView = findViewById(R.id.navigationView)
+        toolbar = findViewById(R.id.toolbar)
+
+        setSupportActionBar(toolbar)
+        supportActionBar?.setDisplayShowTitleEnabled(false)
+        toolbar.setNavigationOnClickListener {
+            drawerLayout.openDrawer(GravityCompat.START)
+        }
+
+        navigationView.setNavigationItemSelectedListener { item ->
+            when (item.itemId) {
+                R.id.nav_settings -> {
+                    startActivity(Intent(this, SettingsActivity::class.java))
+                }
+            }
+            drawerLayout.closeDrawer(GravityCompat.START)
+            true
+        }
+
+        try {
+            val pInfo = packageManager.getPackageInfo(packageName, 0)
+            val versionTextView = navigationView.findViewById<TextView>(R.id.nav_app_version)
+            versionTextView.text = pInfo.versionName
+        } catch (e: Exception) {
+            // ignore
+        }
 
         ViewCompat.setOnApplyWindowInsetsListener(swipeRefresh) { view, insets ->
             val topInset = insets.getInsets(WindowInsetsCompat.Type.systemBars()).top
             val lp = view.layoutParams as ViewGroup.MarginLayoutParams
             lp.topMargin = topInset
             view.layoutParams = lp
+            insets
+        }
+
+        ViewCompat.setOnApplyWindowInsetsListener(navigationView) { view, insets ->
+            val topInset = insets.getInsets(WindowInsetsCompat.Type.systemBars()).top
+            view.setPadding(view.paddingLeft, topInset, view.paddingRight, view.paddingBottom)
             insets
         }
 
@@ -77,6 +137,14 @@ class AliasListActivity : AppCompatActivity() {
         }
 
         loadAliases()
+
+        searchInput.addTextChangedListener(object : android.text.TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
+            override fun afterTextChanged(s: android.text.Editable?) {
+                filterAliases(s?.toString() ?: "")
+            }
+        })
 
         findViewById<FloatingActionButton>(R.id.fabAddAlias).setOnClickListener {
             startActivity(Intent(this, CreateAliasActivity::class.java))
@@ -116,7 +184,8 @@ class AliasListActivity : AppCompatActivity() {
 
                             // 3. Convert the sorted list back to a JSON array string
                             val sortedJsonArray = JSONArray(aliasObjectList)
-                            displayAliases(sortedJsonArray.toString()) // Pass sorted JSON string
+                            allAliasesJson = sortedJsonArray.toString()
+                            filterAliases(searchInput.text.toString())
 
                         } catch (e: Exception) {
                             // Catch parsing/sorting errors
@@ -132,8 +201,36 @@ class AliasListActivity : AppCompatActivity() {
         })
     }
 
+    private fun filterAliases(query: String) {
+        if (allAliasesJson == "[]") {
+            displayAliases(allAliasesJson)
+            return
+        }
+        try {
+            val aliasArray = JSONArray(allAliasesJson)
+            if (query.isEmpty()) {
+                displayAliases(allAliasesJson)
+                return
+            }
+            val filteredList = mutableListOf<JSONObject>()
+            val lowerQuery = query.lowercase()
+            for (i in 0 until aliasArray.length()) {
+                val obj = aliasArray.getJSONObject(i)
+                val privateComment = obj.optString("private_comment", "")
+                val publicComment = obj.optString("public_comment", "")
+                if (privateComment.lowercase().contains(lowerQuery) || publicComment.lowercase().contains(lowerQuery)) {
+                    filteredList.add(obj)
+                }
+            }
+            val filteredArray = JSONArray(filteredList)
+            displayAliases(filteredArray.toString())
+        } catch (e: Exception) {
+            displayAliases(allAliasesJson)
+        }
+    }
+
     private fun displayAliases(jsonString: String) {
-        aliasContainer.removeAllViews()
+        listContainer.removeAllViews()
 
         try {
             val aliasArray = JSONArray(jsonString)
@@ -155,7 +252,7 @@ class AliasListActivity : AppCompatActivity() {
                     params.setMargins(marginInPx, marginInPx, marginInPx, marginInPx)
                     layoutParams = params
                 }
-                aliasContainer.addView(emptyTextView)
+                listContainer.addView(emptyTextView)
                 return
             }
 
@@ -178,7 +275,7 @@ class AliasListActivity : AppCompatActivity() {
                         LinearLayout.LayoutParams.MATCH_PARENT,
                         LinearLayout.LayoutParams.WRAP_CONTENT
                     )
-                    val marginInDp = 8
+                    val marginInDp = 4
                     val marginVerticalInPx = (marginInDp * resources.displayMetrics.density).toInt()
                     val marginHorizontalInPx = (16 * resources.displayMetrics.density).toInt()
                     params.setMargins(marginHorizontalInPx, marginVerticalInPx, marginHorizontalInPx, marginVerticalInPx)
@@ -222,18 +319,168 @@ class AliasListActivity : AppCompatActivity() {
                     isFocusable = true
 
                     setOnClickListener {
-                        showAliasDetailsDialog(address, goto, domain, created, active, privateComment, publicComment)
+                        if (isSelectionMode) {
+                            toggleSelection(address, this)
+                        } else {
+                            showAliasDetailsDialog(address, goto, domain, created, active, privateComment, publicComment)
+                        }
+                    }
+
+                    setOnLongClickListener {
+                        if (!isSelectionMode) {
+                            isSelectionMode = true
+                            toggleSelection(address, this)
+                            toolbar.menu.clear()
+                            toolbar.inflateMenu(R.menu.menu_selection)
+                            toolbar.setNavigationIcon(R.drawable.ic_close)
+                            toolbar.setNavigationOnClickListener {
+                                clearSelection()
+                            }
+                        }
+                        true
                     }
                 }
-                aliasContainer.addView(aliasView)
+                listContainer.addView(aliasView)
             }
         } catch (e: Exception) {
             Toast.makeText(this, "Error parsing data: ${e.message}", Toast.LENGTH_LONG).show()
             // Optionally display the "No aliases found" message here too
-            aliasContainer.removeAllViews()
+            listContainer.removeAllViews()
             val errorTextView = TextView(this).apply { text = "Error displaying aliases."; gravity = Gravity.CENTER }
-            aliasContainer.addView(errorTextView)
+            listContainer.addView(errorTextView)
         }
+    }
+
+    private fun toggleSelection(address: String, view: View) {
+        if (selectedAddresses.contains(address)) {
+            selectedAddresses.remove(address)
+            view.alpha = 1.0f
+        } else {
+            selectedAddresses.add(address)
+            view.alpha = 0.5f
+        }
+        if (selectedAddresses.isEmpty()) {
+            clearSelection()
+        }
+    }
+
+    private fun clearSelection() {
+        isSelectionMode = false
+        selectedAddresses.clear()
+        toolbar.menu.clear()
+        toolbar.setNavigationIcon(R.drawable.ic_menu)
+        toolbar.setNavigationOnClickListener {
+            drawerLayout.openDrawer(GravityCompat.START)
+        }
+        filterAliases(searchInput.text.toString())
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        return when (item.itemId) {
+            R.id.action_delete -> {
+                showBatchDeleteConfirmation()
+                true
+            }
+            R.id.action_toggle_active -> {
+                showBatchToggleActiveConfirmation()
+                true
+            }
+            else -> super.onOptionsItemSelected(item)
+        }
+    }
+
+    private fun showBatchDeleteConfirmation() {
+        MaterialAlertDialogBuilder(this)
+            .setTitle("Delete Aliases")
+            .setMessage("Are you sure you want to delete ${selectedAddresses.size} alias(es)?")
+            .setPositiveButton("Delete") { _, _ ->
+                batchDelete()
+            }
+            .setNegativeButton("Cancel", null)
+            .show()
+    }
+
+    private fun showBatchToggleActiveConfirmation() {
+        MaterialAlertDialogBuilder(this)
+            .setTitle("Toggle Active Status")
+            .setMessage("Toggle active status for ${selectedAddresses.size} alias(es)?")
+            .setPositiveButton("Toggle") { _, _ ->
+                batchToggleActive()
+            }
+            .setNegativeButton("Cancel", null)
+            .show()
+    }
+
+    private fun batchDelete() {
+        swipeRefresh.isRefreshing = true
+        val jsonPayloadArray = JSONArray()
+        selectedAddresses.forEach { jsonPayloadArray.put(it) }
+        val body = jsonPayloadArray.toString().toRequestBody("application/json; charset=utf-8".toMediaTypeOrNull())
+        val request = Request.Builder()
+            .url("https://$baseUrl/api/v1/delete/alias")
+            .post(body)
+            .addHeader("X-Api-Key", apiKey)
+            .addHeader("Content-Type", "application/json")
+            .build()
+        OkHttpClient().newCall(request).enqueue(object : Callback {
+            override fun onFailure(call: Call, e: IOException) {
+                runOnUiThread {
+                    swipeRefresh.isRefreshing = false
+                    Toast.makeText(this@AliasListActivity, "Error: ${e.message}", Toast.LENGTH_SHORT).show()
+                }
+            }
+            override fun onResponse(call: Call, response: Response) {
+                runOnUiThread {
+                    swipeRefresh.isRefreshing = false
+                    if (response.isSuccessful) {
+                        Toast.makeText(this@AliasListActivity, "Aliases deleted", Toast.LENGTH_SHORT).show()
+                        clearSelection()
+                        loadAliases()
+                    } else {
+                        Toast.makeText(this@AliasListActivity, "Error deleting aliases", Toast.LENGTH_SHORT).show()
+                    }
+                }
+            }
+        })
+    }
+
+    private fun batchToggleActive() {
+        swipeRefresh.isRefreshing = true
+        val json = JSONObject().apply {
+            put("attr", JSONObject().apply {
+                put("active", "1")
+            })
+            put("items", JSONArray().apply {
+                selectedAddresses.forEach { put(it) }
+            })
+        }
+        val body = json.toString().toRequestBody("application/json; charset=utf-8".toMediaTypeOrNull())
+        val request = Request.Builder()
+            .url("https://$baseUrl/api/v1/edit/alias")
+            .post(body)
+            .addHeader("X-Api-Key", apiKey)
+            .addHeader("Content-Type", "application/json")
+            .build()
+        OkHttpClient().newCall(request).enqueue(object : Callback {
+            override fun onFailure(call: Call, e: IOException) {
+                runOnUiThread {
+                    swipeRefresh.isRefreshing = false
+                    Toast.makeText(this@AliasListActivity, "Error: ${e.message}", Toast.LENGTH_SHORT).show()
+                }
+            }
+            override fun onResponse(call: Call, response: Response) {
+                runOnUiThread {
+                    swipeRefresh.isRefreshing = false
+                    if (response.isSuccessful) {
+                        Toast.makeText(this@AliasListActivity, "Aliases updated", Toast.LENGTH_SHORT).show()
+                        clearSelection()
+                        loadAliases()
+                    } else {
+                        Toast.makeText(this@AliasListActivity, "Error updating aliases", Toast.LENGTH_SHORT).show()
+                    }
+                }
+            }
+        })
     }
 
     private fun showAliasDetailsDialog(address: String, goto: String, domain: String, created: String, active: Int, privateComment: String, publicComment: String) {
