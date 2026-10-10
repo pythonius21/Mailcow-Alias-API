@@ -83,7 +83,12 @@ class CreateAliasActivity  : AppCompatActivity() {
                 return@setOnClickListener
             }
 
-            createAlias("$address@$aliasDomain", goto)
+            val fullAddress = if (address.contains("@")) {
+                address
+            } else {
+                "$address@$aliasDomain"
+            }
+            createAlias(fullAddress, goto)
         }
     }
 
@@ -165,7 +170,7 @@ class CreateAliasActivity  : AppCompatActivity() {
         }
         if (prefixWords.isEmpty()) {
             val randomPrefix = "random${Random.nextInt(1000, 9999)}"
-            addressInput.setText("$randomPrefix@$aliasDomain")
+            addressInput.setText(randomPrefix)
             Toast.makeText(this, "Word list empty, using default.", Toast.LENGTH_SHORT).show()
             return
         }
@@ -173,8 +178,7 @@ class CreateAliasActivity  : AppCompatActivity() {
         val randomWord = prefixWords.random()
         val randomNumber = Random.nextInt(100, 9999)
         val newAliasPrefix = "$randomWord$randomNumber"
-        val newAlias = "$newAliasPrefix@$aliasDomain"
-        addressInput.setText(newAlias)
+        addressInput.setText(newAliasPrefix)
     }
 
     private fun createAlias(addressToCopy: String, goto: String) {
